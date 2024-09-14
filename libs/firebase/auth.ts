@@ -4,14 +4,19 @@ import {
   signInWithPopup,
   onAuthStateChanged as _onAuthStateChanged,
 } from 'firebase/auth';
-
 import { firebaseAuth } from './config';
+import admin from './firebaseAdmin';
 
-export function onAuthStateChanged(callback: (authUser: User | null) => void) {
+// Define types
+type AuthStateChangedCallback = (authUser: User | null) => void;
+
+// Function to handle authentication state changes
+export function onAuthStateChanged(callback: AuthStateChangedCallback) {
   return _onAuthStateChanged(firebaseAuth, callback);
 }
 
-export async function signInWithGoogle() {
+// Function to sign in with Google
+export async function signInWithGoogle(): Promise<string | undefined> {
   const provider = new GoogleAuthProvider();
 
   try {
@@ -24,13 +29,26 @@ export async function signInWithGoogle() {
     return result.user.uid;
   } catch (error) {
     console.error('Error signing in with Google', error);
+    return undefined;
   }
 }
 
-export async function signOutWithGoogle() {
+// Function to sign out with Google
+export async function signOutWithGoogle(): Promise<void> {
   try {
     await firebaseAuth.signOut();
   } catch (error) {
     console.error('Error signing out with Google', error);
+  }
+}
+
+// Function to verify Firebase ID token
+export async function verifyToken(idToken: string): Promise<admin.auth.DecodedIdToken> {
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    return decodedToken;
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    throw new Error('Unauthorized');
   }
 }
